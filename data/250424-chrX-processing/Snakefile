@@ -1,0 +1,68 @@
+CHRX = '/home/smedina/results/chromosome-x/250422-raw-vcfs/tgp_chrX.vcf.gz'
+PROCESSED_CHRX = '/home/smedina/results/chromosome-x/250423-processed_chrX/chrX.vcf.gz'
+
+SCRATCH = '/home/smedina/scratch/250423-chrx-processing'
+
+rule all:
+    input:
+        PROCESSED_CHRX
+
+
+rule exclude_chrX_PAR_GRCh38:
+    """
+    Exclude pseudoautosomal regions (PAR1 and PAR2) from chromosome X using GRCh38 coordinates.
+    Keeps only the non-PAR regions of chrX.
+    """
+    input:
+        vcf=CHRX,
+        par_bed="data/chrX_PAR_GRCh38.bed"
+    output:
+        vcf=f"{SCRATCH}/chrX_nonPAR.vcf.gz",
+        index=f"{SCRATCH}/chrX_nonPAR.vcf.gz.tbi"
+    shell:
+        """
+        bcftools view \
+            -T ^{input.par_bed} \
+            --output-type z \
+            --output {output.vcf} \
+            {input.vcf}
+
+        bcftools index --tbi {output.vcf}
+        """
+
+
+rule make_males_diploid:
+    """
+    Convert chrX VCF to diploid representation using a custom Python script.
+    This is useful for harmonizing chrX format across male samples in downstream diploid-only tools.
+    """
+    input:
+        vcf=f"{SCRATCH}/chrX_nonPAR.vcf.gz"
+    output:
+        diploid_vcf=f"{SCRATCH}/chrX_nonPAR_males_diploid.vcf"
+    log:
+        f"{SCRATCH}/logs/make_males_diploid.log"
+    shell:
+        """
+        mkdir -p {SCRATCH}/logs
+        python scripts/convert_chromosome_X.py {input.vcf} {output.diploid_vcf} > {log} 2>&1
+        """
+
+
+rule rename_vcf:
+    """
+    rename 23 to chrX (keeping the orginal name)
+    and save final compressed vcf
+    """
+    input:
+        diploid_vcf=f"{SCRATCH}/chrX_nonPAR_males_diploid.vcf",
+        rename='data/rename.txt'
+    output:
+        PROCESSED_CHRX
+    shell:
+        """
+        bcftools annotate --rename-chrs {input.rename} {input.diploid_vcf} |\
+            bcftools view -W=tbi -Oz -o {output}
+        """
+
+    
