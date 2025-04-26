@@ -1,0 +1,54 @@
+SCRATCH = '/data/tmp/smedina/250320-1TGP-data'
+CHROMS = list(range(1, 23)) + ['X']
+
+rule all:
+    input:
+        expand('/data/data_vault/smedina/results/chromosome-x/250422-raw-vcfs/tgp_chr{chrn}.vcf.gz', chrn=CHROMS)
+
+
+rule download_autosome:
+    output:
+        "CCDG_14151_B01_GRM_WGS_2020-08-05_chr{chrn}.filtered.vcf.gz"
+    params:
+        link = "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chr{chrn}.filtered.shapeit2-duohmm-phased.vcf.gz",
+        chrn = '{chrn}'
+    shell:
+        """
+        wget {params.link}
+        mv CCDG_14151_B01_GRM_WGS_2020-08-05_chr{params.chrn}.filtered.shapeit2-duohmm-phased.vcf.gz CCDG_14151_B01_GRM_WGS_2020-08-05_chr{params.chrn}.filtered.vcf.gz
+        """
+
+rule download_x:
+    output:
+        "CCDG_14151_B01_GRM_WGS_2020-08-05_chrX.filtered.vcf.gz"
+    params:
+        link = "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chrX.filtered.eagle2-phased.v2.vcf.gz",
+    shell:
+        """
+        wget {params.link}
+        mv CCDG_14151_B01_GRM_WGS_2020-08-05_chrX.filtered.eagle2-phased.v2.vcf.gz CCDG_14151_B01_GRM_WGS_2020-08-05_chrX.filtered.vcf.gz
+        """
+
+rule samples_of_interest:
+    input:
+        "data/integrated_call_samples_v3.20130502.ALL.panel"
+    output:
+        "data/popinfo.txt",
+        "data/samples.txt"
+    shell:
+        """
+        grep -E '(MXL|PEL|PUR|ASW|YRI|IBS|GBR)' {input} >{output[0]}
+        cut -f1 {output[0]} > {output[1]}
+        """
+
+rule sample_vcf:
+    input:
+        samples = "data/samples.txt",
+        vcf = "CCDG_14151_B01_GRM_WGS_2020-08-05_chr{chrn}.filtered.vcf.gz"
+    output:
+        '/data/data_vault/smedina/results/chromosome-x/250422-raw-vcfs/tgp_chr{chrn}.vcf.gz',
+        '/data/data_vault/smedina/results/chromosome-x/250422-raw-vcfs/tgp_chr{chrn}.vcf.gz.tbi'
+    shell:
+        '''
+        bcftools view --min-alleles 2 --max-alleles 2 -S {input.samples} -c1 {input.vcf} -W=tbi -Oz -o {output[0]}
+        '''

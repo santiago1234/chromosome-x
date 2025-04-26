@@ -1,0 +1,34 @@
+gnomix_config: "/home/smedina/pipelines/local-ancestry/config/whole_genomes.yaml"
+scratch: "/home/smedina/scratch/250424-LAI-X"
+# sample_map_file should match this format: https://github.com/AI-sandbox/gnomix/blob/main/demo/data/1000g.smap
+sample_map_file: "/home/smedina/chromosome-x/data/250425-lai/data/panel.txt"
+query_samples: "/home/smedina/chromosome-x/data/250425-lai/data/query_samples.txt"
+vcf: "/home/smedina/chromosome-x/data/250425-lai/data/tgp_chr{chrn}.vcf.gz"
+genetic_map: "/data/data_vault/smedina/data/common-resources/genetic_maps/beagle/plink.chr{chrn}.GRCh38.withchrprefix.map" # the genetic map
+phase: True
+mac: 5 # Minor allele count, if 0 it will use all variants in the freeze
+resulstdir: "/home/smedina/results/chromosome-x/250424-LAI"
+chroms:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
+    - X
