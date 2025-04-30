@@ -6,7 +6,7 @@ query_samples: "/home/smedina/chromosome-x/data/250425-lai/data/query_samples.tx
 vcf: "/home/smedina/chromosome-x/data/250425-lai/data/tgp_chr{chrn}.vcf.gz"
 genetic_map: "/data/data_vault/smedina/data/common-resources/genetic_maps/beagle/plink.chr{chrn}.GRCh38.withchrprefix.map" # the genetic map
 phase: True
-mac: 5 # Minor allele count, if 0 it will use all variants in the freeze
+mac: 2 # Minor allele count, if 0 it will use all variants in the freeze
 resulstdir: "/home/smedina/results/chromosome-x/250424-LAI"
 chroms:
     - 1
