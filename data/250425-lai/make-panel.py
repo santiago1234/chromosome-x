@@ -16,7 +16,8 @@ afr_panel = popinfo[popinfo['pop'] == 'YRI'].copy()
 panel = pd.concat([eur_panel, afr_panel])
 panel = panel[['sample', 'super_pop']]
 panel = panel.rename(columns={'sample': '#Sample', 'super_pop': 'Panel'})
-panel = pd.concat([panel, native_panel])
+# exclude AMR panel
+panel = pd.concat([panel])
 
 # Save to space-separated table
 panel.to_csv('data/panel.txt', sep='\t', index=False)
