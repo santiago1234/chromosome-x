@@ -1,0 +1,28 @@
+configfile: "config.yaml"
+
+
+rule all:
+    input:
+        expand('data/corrected_phase_island/{sampleid}_{hapid}.bed', sampleid=config["samples"], hapid=[0,1])
+
+rule correct_phase_error:
+    input:
+        hap_0 = config["hap_0_bed"],
+        hap_1 = config["hap_1_bed"]
+    output:
+        hap_0 = 'data/corrected_phase/{sampleid}_0.bed',
+        hap_1 = 'data/corrected_phase/{sampleid}_1.bed',
+    shell:
+        '''
+        python scripts/fix_phase.py {input.hap_0} {input.hap_1} {output.hap_0} {output.hap_1}
+        '''
+
+rule correct_islands:
+    input:
+        hap = 'data/corrected_phase/{sampleid}_{hapid}.bed'
+    output:
+        hap = 'data/corrected_phase_island/{sampleid}_{hapid}.bed'
+    shell:
+        '''
+        python scripts/fix_short_islands.py {input.hap} {output.hap}
+        '''
