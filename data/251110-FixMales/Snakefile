@@ -1,4 +1,3 @@
-import pandas as pd
  
 SAMPLES = [
     "NA19625",
@@ -64,12 +63,50 @@ SAMPLES = [
     "NA20412"
         ]
 
-POP_INFO = '../250320-1tgp/data/popinfo.txt'
-POP_INFO = pd.read_csv(POP_INFO, sep='\t')
+import pandas as pd
+
+# ---------------------------------------------------------
+# Load population info
+# ---------------------------------------------------------
+POP_INFO_FILE = '../250320-1tgp/data/popinfo.txt'
+POP_INFO = pd.read_csv(POP_INFO_FILE, sep='\t', names=['Sample', 'POP', 'REG', 'Sex'])
+
+# List of male samples
+MALE_SAMPLES = set(POP_INFO.query("Sex == 'male'").Sample.tolist())
+
+def is_male(wildcards):
+    """Return True/False depending on whether sample is male"""
+    return wildcards.sample in MALE_SAMPLES
 
 
+rule all:
+    input:
+        expand('data/{sample}_0.bed', sample=SAMPLES),
+        expand('data/{sample}_1.bed', sample=SAMPLES),
+
+# ---------------------------------------------------------
+# Rule
+# ---------------------------------------------------------
 rule remove_X_when_male:
     input:
         bed_0 = '../251002-smooth-tracts/data/corrected_phase_island/{sample}_0.bed',
         bed_1 = '../251002-smooth-tracts/data/corrected_phase_island/{sample}_1.bed',
-    
+    output:
+        bed_0 = 'data/{sample}_0.bed',
+        bed_1 = 'data/{sample}_1.bed',
+    params:
+        male = is_male
+    shell:
+        r"""
+        if [ "{params.male}" = "True" ]; then
+            # Remove chrX for males
+            grep -v 'chrX' {input.bed_0} > {output.bed_0}
+        else
+            # Copy as is for females
+            cp {input.bed_0} {output.bed_0}
+        fi
+
+        # Copy haplotype 1 unchanged
+        cp {input.bed_1} {output.bed_1}
+        """
+
